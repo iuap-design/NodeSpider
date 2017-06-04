@@ -1,0 +1,23 @@
+{
+  "name": "node-spider",
+  "version": "1.0.0",
+  "description": "node爬虫",
+  "main": "index.js",
+  "scripts": {
+      "getData": "node spider.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HuYuee/NodeSpider.git"
+  },
+  "author": "huyue",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HuYuee/NodeSpider/issues"
+  },
+  "homepage": "https://github.com/HuYuee/NodeSpider#readme",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.1",
+    "request": "^2.81.0"
+  }
+}
