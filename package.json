@@ -4,7 +4,7 @@
   "description": "node爬虫",
   "main": "index.js",
   "scripts": {
-      "getData": "node spider.js"
+    "getData": "node spider.js"
   },
   "repository": {
     "type": "git",
@@ -17,7 +17,9 @@
   },
   "homepage": "https://github.com/HuYuee/NodeSpider#readme",
   "dependencies": {
+    "async": "^2.4.1",
     "cheerio": "^1.0.0-rc.1",
+    "promise": "^7.1.1",
     "request": "^2.81.0"
   }
 }

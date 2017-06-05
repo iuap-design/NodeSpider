@@ -2,24 +2,16 @@ var http = require('http');
 var fs = require('fs');
 var cheerio = require('cheerio');
 var request = require('request');
-var async = require('async');
-var concurrencyCount = 0;
 var i = 0;
-var url = "http://www.bootcdn.cn/Swiper/";
+var url = "http://www.bootcdn.cn/react/";
+// var url = "https://image.baidu.com/search/index?tn=baiduimage&ct=201326592&lm=-1&cl=2&ie=gbk&word=%C3%C0%C5%AE&fr=ala&ala=1&alatpl=adress&pos=0&hs=2&xthttps=111111";
+
 //初始url
 
 function fetchPage(x) { //封装了一层函数
     startRequest(x);
 }
 
-var DIRNAME = url.split('/')[url.split('/').length - 2].toLowerCase();
-
-if (fs.existsSync('./data/' + DIRNAME + "/")) {
-    // console.log('已经创建过此更新目录了');
-} else {
-    fs.mkdirSync('./data/' + DIRNAME + "/");
-    console.log('更新目录已创建成功\n');
-}
 
 function startRequest(x) {
     //采用http模块向服务器发起一次get请求
@@ -35,15 +27,19 @@ function startRequest(x) {
         res.on('end', function() {
 
             var $ = cheerio.load(html),
-                name = url.split('/')[url.split('/').length - 2].toLowerCase(),
+                name = url.split('/')[url.split('/').length - 2],
                 json = {},
-                versoins = [],
-                urls = []; //采用cheerio模块解析html
+                versoins = []; //采用cheerio模块解析html
 
             json = {
                 name: name,
-                download: {}
+                download: {
+
+                }
             }
+            // console.log($($('.container>h3')[i]).html());
+
+            // $($('.container>h3')[i]).each(function() {
             $('.container>h3').each(function() {
                 var $this = $(this),
                     title = $this.text().trim(),
@@ -56,72 +52,101 @@ function startRequest(x) {
                     //i是用来判断获取了多少篇文章
                     i: i = i + 1,
                 };
+                console.log(news_item); //打印新闻信息
                 $this.next().find('.library-url').each(function() {
                     var link = $(this).html(),
                         link_arry = link.split('/'),
-                        filename = '/'+link_arry[link_arry.length - 1];
-                    // savedContent(link, title);
-                    urls.push(link);
+                        filename = link_arry[link_arry.length - 1];
+                    savedContent(link, title);
                     fileName.push(filename);
                 })
                 json['download'][version] = fileName;
                 versoins.push(version);
-                if (i > 15) {
+                if(i>10){
                     return false;
                 }
-            });
-            async.mapLimit(urls, 5, function(url, callback) {
-                savedContent(url, callback);
-            }, function(err, result) {
-                console.log("conglatulation! it's completed!");
-            });
+
+            })
             json['version'] = versoins;
 
-            if (fs.existsSync('./jsonconfig/' + name + "/")) {
-                // console.log('已经创建过此更新目录了');
-            } else {
-                fs.mkdirSync('./jsonconfig/' + name + "/");
-                console.log('jsonconfig更新目录已创建成功\n');
-            }
-            fs.writeFile('./jsonconfig/' + name + "/index.json", JSON.stringify(json), 'utf-8', function(err) {
-                if (err) {
-                    console.log(err);
-                }
-            });
+            // if (fs.existsSync('./jsonconfig/' + name + "/")) {
+            //     // console.log('已经创建过此更新目录了');
+            // } else {
+            //     fs.mkdirSync('./jsonconfig/' + name + "/");
+            //     console.log('jsonconfig更新目录已创建成功\n');
+            // }
+            // fs.writeFile('./jsonconfig/' + name + "/index.json", JSON.stringify(json), 'utf-8', function(err) {
+            //     if (err) {
+            //         console.log(err);
+            //     }
+            // });
         });
     }).on('error', function(err) {
         console.log(err);
     });
 }
 
-function savedContent(link, callback) {
+//保存每个版本的内容
+function savedContent(link, title) {
     link = "http://" + link.split('://')[1];
-    var delay = parseInt((Math.random() * 10000000) % 2000, 10);
-    concurrencyCount++;
-    console.log('现在的并发数是', concurrencyCount, '，正在抓取的是', url, '，耗时' + delay + '毫秒');
-    setTimeout(function() {
-        concurrencyCount--;
-        request(link, function(error, response, html) {
+    // request(link, function(error, response, html) {
+    //     var $ = cheerio.load(html); //采用cheerio模块解析html
+    //
+    //     var array = link.split('/');
+    //     var name = array[array.length - 1];
+    //     var dir_name = title.split('：')[1];
+    //     if (fs.existsSync('./data/' + dir_name + "/")) {
+    //         // console.log('已经创建过此更新目录了');
+    //     } else {
+    //         fs.mkdirSync('./data/' + dir_name + "/");
+    //         console.log('更新目录已创建成功\n');
+    //     }
+    //     fs.writeFile('./data/' + dir_name + "/" + name, html, 'utf-8', function(err) {
+    //         if (err) {
+    //             console.log(err);
+    //         }
+    //     });
+    //     // if(i<10){
+    //     //     fetchPage(url);
+    //     // }
+    //
+    // });
+
+    http.get(url, function(res) {
+        var html = ''; //用来存储请求网页的整个html内容
+        res.setEncoding('utf-8'); //防止中文乱码
+        //监听data事件，每次取一块数据
+        res.on('data', function(chunk) {
+            html += chunk;
+        });
+        //监听end事件，如果整个网页内容的html都获取完毕，就执行回调函数
+        res.on('end', function() {
             var $ = cheerio.load(html); //采用cheerio模块解析html
 
             var array = link.split('/');
             var name = array[array.length - 1];
-            var dir_name = array[4];
-            if (fs.existsSync('./data/' + DIRNAME + "/" + dir_name + "/")) {
+            var dir_name = title.split('：')[1];
+            if (fs.existsSync('./data/' + dir_name + "/")) {
                 // console.log('已经创建过此更新目录了');
             } else {
-                fs.mkdirSync('./data/' + DIRNAME + "/" + dir_name + "/");
+                fs.mkdirSync('./data/' + dir_name + "/");
+                console.log('更新目录已创建成功\n');
             }
-            fs.writeFileSync('./data/' + DIRNAME + "/" + dir_name + "/" + name, html, 'utf-8', function(err) {
+            fs.writeFile('./data/' + dir_name + "/" + name, html, 'utf-8', function(err) {
                 if (err) {
                     console.log(err);
                 }
             });
+            // if(i<10){
+            //     fetchPage(url);
+            // }
+
+
         });
-        callback(null, url + ' html content');
 
-    }, delay);
-
+    }).on('error', function(err) {
+        console.log(err);
+    });
 }
 
 //该函数的作用：在本地存储所爬取到的图片资源
@@ -147,6 +172,7 @@ function savedContent(link, callback) {
 //         }
 //     })
 // }
+fetchPage(url); //主程序开始运行
 // function openImage(url) {
 //     console.log(url);
 //     request(url, function(error, response, body) {
@@ -160,4 +186,3 @@ function savedContent(link, callback) {
 //
 // }
 // openImage(url);
-fetchPage(url); //主程序开始运行
