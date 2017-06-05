@@ -12,13 +12,28 @@ function fetchPage(x) { //封装了一层函数
     startRequest(x);
 }
 
+
+
 var DIRNAME = url.split('/')[url.split('/').length - 2].toLowerCase();
+
+if (fs.existsSync('./data/')) {
+    // console.log('已经创建过此更新目录了');
+} else {
+    fs.mkdirSync('./data/');
+    console.log('data目录已创建成功\n');
+}
+if (fs.existsSync('./jsonconfig/')) {
+    // console.log('已经创建过此更新目录了');
+} else {
+    fs.mkdirSync('./jsonconfig/');
+    console.log('jsonconfig目录已创建成功\n');
+}
 
 if (fs.existsSync('./data/' + DIRNAME + "/")) {
     // console.log('已经创建过此更新目录了');
 } else {
     fs.mkdirSync('./data/' + DIRNAME + "/");
-    console.log('更新目录已创建成功\n');
+    console.log('目录已创建成功\n');
 }
 
 function startRequest(x) {
