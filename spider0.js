@@ -5,7 +5,7 @@ var request = require('request');
 var async = require('async');
 var concurrencyCount = 0;
 var i = 0;
-var url = "http://www.bootcdn.cn/react/";
+var url = "http://www.bootcdn.cn/Swiper/";
 //初始url
 
 function fetchPage(x) { //封装了一层函数
@@ -48,6 +48,7 @@ function startRequest(x) {
         });
         //监听end事件，如果整个网页内容的html都获取完毕，就执行回调函数
         res.on('end', function() {
+
             var $ = cheerio.load(html),
                 name = url.split('/')[url.split('/').length - 2].toLowerCase(),
                 json = {},
@@ -73,7 +74,7 @@ function startRequest(x) {
                 $this.next().find('.library-url').each(function() {
                     var link = $(this).html(),
                         link_arry = link.split('/'),
-                        filename = '/' + link_arry[link_arry.length - 1];
+                        filename = '/'+link_arry[link_arry.length - 1];
                     // savedContent(link, title);
                     urls.push(link);
                     fileName.push(filename);
@@ -84,43 +85,11 @@ function startRequest(x) {
                     return false;
                 }
             });
-            console.log('通过async/awite 来实现');
-            var readFileFunPromise = function(fileName) {
-                return new Promise(function(resolve, reject) {
-                    // savedContent(fileName, function(e, fileData) {
-                    //     resolve(fileData);
-                    // });
-                    var link = "http://" + fileName.split('://')[1];
-                    request(link, function(error, response, html) {
-                        var $ = cheerio.load(html); //采用cheerio模块解析html
-                        // callback(undefined, html);
-                        resolve(html);
-                    });
-                });
-            };
-
-            var asyncFun = async function() {
-                for (var i = 0; i < urls.length; i++) {
-                    var link = "http://" + urls[i].split('://')[1];
-                    var fileData = await readFileFunPromise(urls[i]);
-                    console.log(link);
-                    var array = link.split('/');
-                    var name = array[array.length - 1];
-                    var dir_name = array[4];
-                    if (fs.existsSync('./data/' + DIRNAME + "/" + dir_name + "/")) {
-                        // console.log('已经创建过此更新目录了');
-                    } else {
-                        fs.mkdirSync('./data/' + DIRNAME + "/" + dir_name + "/");
-                    }
-                    fs.writeFileSync('./data/' + DIRNAME + "/" + dir_name + "/" + name, html, 'utf-8', function(err) {
-                        if (err) {
-                            console.log(err);
-                        }
-                    });
-                }
-            };
-
-            asyncFun()
+            async.mapLimit(urls, 5, function(url, callback) {
+                savedContent(url, callback);
+            }, function(err, result) {
+                console.log("conglatulation! it's completed!");
+            });
             json['version'] = versoins;
 
             if (fs.existsSync('./jsonconfig/' + name + "/")) {
@@ -140,14 +109,33 @@ function startRequest(x) {
     });
 }
 
-function savedContent(link) {
+function savedContent(link, callback) {
     link = "http://" + link.split('://')[1];
-    request(link, function(error, response, html) {
-        var $ = cheerio.load(html); //采用cheerio模块解析html
-        // callback(undefined, html);
+    var delay = parseInt((Math.random() * 10000000) % 2000, 10);
+    concurrencyCount++;
+    console.log('现在的并发数是', concurrencyCount, '，正在抓取的是', url, '，耗时' + delay + '毫秒');
+    setTimeout(function() {
+        concurrencyCount--;
+        request(link, function(error, response, html) {
+            var $ = cheerio.load(html); //采用cheerio模块解析html
 
-    });
+            var array = link.split('/');
+            var name = array[array.length - 1];
+            var dir_name = array[4];
+            if (fs.existsSync('./data/' + DIRNAME + "/" + dir_name + "/")) {
+                // console.log('已经创建过此更新目录了');
+            } else {
+                fs.mkdirSync('./data/' + DIRNAME + "/" + dir_name + "/");
+            }
+            fs.writeFileSync('./data/' + DIRNAME + "/" + dir_name + "/" + name, html, 'utf-8', function(err) {
+                if (err) {
+                    console.log(err);
+                }
+            });
+        });
+        callback(null, url + ' html content');
 
+    }, delay);
 
 }
 
