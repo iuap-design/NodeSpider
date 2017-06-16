@@ -1,3 +1,5 @@
+//await
+
 var http = require('http');
 var fs = require('fs');
 var cheerio = require('cheerio');
@@ -11,8 +13,6 @@ var url = "http://www.bootcdn.cn/react/";
 function fetchPage(x) { //封装了一层函数
     startRequest(x);
 }
-
-
 
 var DIRNAME = url.split('/')[url.split('/').length - 2].toLowerCase();
 
@@ -74,7 +74,6 @@ function startRequest(x) {
                     var link = $(this).html(),
                         link_arry = link.split('/'),
                         filename = '/' + link_arry[link_arry.length - 1];
-                    // savedContent(link, title);
                     urls.push(link);
                     fileName.push(filename);
                 })
@@ -87,9 +86,6 @@ function startRequest(x) {
             console.log('通过async/awite 来实现');
             var readFileFunPromise = function(fileName) {
                 return new Promise(function(resolve, reject) {
-                    // savedContent(fileName, function(e, fileData) {
-                    //     resolve(fileData);
-                    // });
                     var link = "http://" + fileName.split('://')[1];
                     request(link, function(error, response, html) {
                         var $ = cheerio.load(html); //采用cheerio模块解析html
