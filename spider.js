@@ -4,7 +4,6 @@ var http = require('http');
 var fs = require('fs');
 var cheerio = require('cheerio');
 var request = require('request');
-var async = require('async');
 var concurrencyCount = 0;
 var i = 0;
 var url = "http://www.bootcdn.cn/react/";
