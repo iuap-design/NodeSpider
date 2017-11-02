@@ -6,7 +6,9 @@ var cheerio = require('cheerio');
 var request = require('request');
 var concurrencyCount = 0;
 var i = 0;
+var data = [];//获取解析到的version和链接下载地址的对象，方便到时候获取到版本所对应的地址
 var url = "http://www.bootcdn.cn/react/";
+var mkdirs = require('jm-mkdirs');
 //初始url
 
 function fetchPage(x) { //封装了一层函数
@@ -57,12 +59,15 @@ function startRequest(x) {
                 name: name,
                 download: {}
             }
+            
             $('.container>h3').each(function() {
                 var $this = $(this),
                     title = $this.text().trim(),
                     version = title.split('：')[1],
                     fileName = [],
-                    d_json = {};
+                    d_json = {},
+                    url = [],
+                    obj = {};
                 var news_item = {
                     //获取文章的标题
                     title: title,
@@ -71,16 +76,22 @@ function startRequest(x) {
                 };
                 $this.next().find('.library-url').each(function() {
                     var link = $(this).html(),
-                        link_arry = link.split('/'),
+                        link_arry = link.split(version+'/'),
                         filename = '/' + link_arry[link_arry.length - 1];
                     urls.push(link);
+                    url.push(link);
                     fileName.push(filename);
                 })
                 json['download'][version] = fileName;
                 versoins.push(version);
-                if (i > 15) {
+                obj["version"] = version;
+                obj["url"] = url;
+                data.push(obj);
+                if (i > 20) {
                     return false;
                 }
+                // console.log(version)
+                // asyncFun(version);
             });
             console.log('通过async/awite 来实现');
             var readFileFunPromise = function(fileName) {
@@ -93,28 +104,59 @@ function startRequest(x) {
                     });
                 });
             };
-
+            
             var asyncFun = async function() {
-                for (var i = 0; i < urls.length; i++) {
-                    var link = "http://" + urls[i].split('://')[1];
-                    var fileData = await readFileFunPromise(urls[i]);
-                    console.log(link);
-                    var array = link.split('/');
-                    var name = array[array.length - 1];
-                    var dir_name = array[4];
-                    if (fs.existsSync('./data/' + DIRNAME + "/" + dir_name + "/")) {
-                        // console.log('已经创建过此更新目录了');
-                    } else {
-                        fs.mkdirSync('./data/' + DIRNAME + "/" + dir_name + "/");
-                    }
-                    fs.writeFileSync('./data/' + DIRNAME + "/" + dir_name + "/" + name, html, 'utf-8', function(err) {
-                        if (err) {
-                            console.log(err);
+                for (var index = 0; index < data.length; index++) {
+                    var urls = data[index].url,
+                        version = data[index].version;
+            
+                    for (var i = 0; i < urls.length; i++) {
+                        var link = "http://" + urls[i].split('://')[1];
+                        var fileData = await readFileFunPromise(urls[i]);
+                        console.log(link);
+                        var array = link.split(version+'/');
+                        var name = array[array.length - 1];
+                        var name_array = name.split('/');
+                        var dir_name;
+                        try {
+                            if(name_array.length>1){
+                                name = name_array.pop();
+                                dir_name = name_array.join('/');
+                                var source = './data/' + DIRNAME + "/" + version +"/"+dir_name+"/";
+                                if (!fs.existsSync(source)) {
+                                    mkdirs.sync(source)
+                                } else {
+                                    
+                                }
+                                fs.writeFileSync(source + name, fileData, 'utf-8', function(err) {
+                                    if (err) {
+                                        console.log(err);
+                                    }
+                                });
+                                
+                            }else{
+                                dir_name = array[1];
+                                var source = './data/' + DIRNAME + "/" + version;
+                                if (fs.existsSync(source)) {
+                                    // console.log('已经创建过此更新目录了');
+                                } else {
+                                    fs.mkdirSync(source);
+                                }
+                                fs.writeFileSync(source + "/" + name, fileData, 'utf-8', function(err) {
+                                    if (err) {
+                                        console.log(err);
+                                    }
+                                });
+                            }
+                        } catch (error) {
+                            // console.log(error)
                         }
-                    });
+                        
+                        
+                    }
                 }
+                
             };
-
             asyncFun()
             json['version'] = versoins;
 
