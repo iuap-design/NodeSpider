@@ -4,7 +4,9 @@
   "description": "node爬虫",
   "main": "index.js",
   "scripts": {
-    "getData": "node spider.js"
+    "getData": "node spider.js",
+    "del": "rm -rf ./data",
+    "dev": "npm run del&&npm run getData"
   },
   "repository": {
     "type": "git",
