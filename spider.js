@@ -6,12 +6,17 @@ var cheerio = require("cheerio");
 var request = require("request");
 var concurrencyCount = 0;
 var json = "./data.json";
+var config = "./jsonconfig/index.json";
 // var url = "http://www.bootcdn.cn/react/";
 var mkdirs = require("jm-mkdirs");
+var defaut_image =
+  "http://iuap-design-cdn.oss-cn-beijing.aliyuncs.com/static/cdnconfig/default.png";
 var json_urls = JSON.parse(fs.readFileSync(json, "utf8")).urls;
-
+var config_all_data = JSON.parse(fs.readFileSync(config, "utf8"));
+var config_data = config_all_data.prod;
+var flag = false;
 //初始url
-var fetchPage = function(url) {
+var fetchPage = function(url, array, bool) {
   //封装了一层函数
   var DIRNAME = url.split("/")[url.split("/").length - 2].toLowerCase();
   if (!fs.existsSync("./data/")) {
@@ -24,7 +29,17 @@ var fetchPage = function(url) {
   if (!fs.existsSync("./data/" + DIRNAME + "/")) {
     fs.mkdirSync("./data/" + DIRNAME + "/");
   }
-  startRequest(url, DIRNAME);
+  try {
+    if (array.indexOf(DIRNAME) === -1) {
+      flag = true;
+    } else {
+      flag = false;
+    }
+  } catch (error) {
+    flag = false;
+  }
+
+  startRequest(url, DIRNAME, flag, bool);
 };
 
 var getHtml = function(url) {
@@ -37,7 +52,7 @@ var getHtml = function(url) {
   });
 };
 
-var startRequest = async function(url, DIRNAME) {
+var startRequest = async function(url, DIRNAME, flag, bool) {
   var data = [],
     i = 0,
     //采用http模块向服务器发起一次get请求
@@ -52,7 +67,27 @@ var startRequest = async function(url, DIRNAME) {
     name: name,
     download: {}
   };
-
+  if (flag) {
+    var config_item = {
+      name: name,
+      image: defaut_image,
+      desc: $(".container.jumbotron>p").html()
+    };
+    config_data.push(config_item);
+  }
+  if (bool) {
+    config_all_data["prod"] = config_data;
+    fs.writeFileSync(
+        "./jsonconfig/index.json",
+        JSON.stringify(config_all_data),
+        "utf-8",
+        function(err) {
+          if (err) {
+            console.log(err);
+          }
+        }
+      );
+  }
   $(".container>h3").each(function() {
     var $this = $(this),
       title = $this.text().trim(),
@@ -83,8 +118,8 @@ var startRequest = async function(url, DIRNAME) {
     obj["version"] = version;
     obj["url"] = url;
     data.push(obj);
-    if (i > 1) {
-      // return false;
+    if (i > 0) {
+      return false;
     }
   });
   var readFileFunPromise = function(fileName) {
@@ -215,9 +250,27 @@ function savedContent(link) {
 // openImage(url);
 // fetchPage(url); //主程序开始运行
 var getUrl = function(json_urls) {
+  var config_name_arr = getConfigName();
   for (var index = 0; index < json_urls.length; index++) {
     var url = json_urls[index];
-    fetchPage(url);
+    if (index == json_urls.length - 1) {
+      fetchPage(url, config_name_arr, true);
+    } else {
+      fetchPage(url, config_name_arr);
+    }
   }
+};
+
+var getConfigName = function() {
+  var data = [];
+  for (
+    var config_index = 0;
+    config_index < config_data.length;
+    config_index++
+  ) {
+    var config_name = config_data[config_index].name;
+    data.push(config_name);
+  }
+  return data;
 };
 getUrl(json_urls);

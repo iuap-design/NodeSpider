@@ -13,6 +13,7 @@
         "http://www.bootcdn.cn/redux/",
         "http://www.bootcdn.cn/require.js/",
         "http://www.bootcdn.cn/Swiper/",
-        "http://www.bootcdn.cn/underscore.js/"
+        "http://www.bootcdn.cn/underscore.js/",
+        "http://www.bootcdn.cn/codemirror/"
     ]
 }
