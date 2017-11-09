@@ -126,9 +126,11 @@ var startRequest = async function(url, DIRNAME, flag, bool) {
     return new Promise(function(resolve, reject) {
       var link = "http://" + fileName.split("://")[1];
       request(link, function(error, response, html) {
-        var $ = cheerio.load(html); //采用cheerio模块解析html
-        // callback(undefined, html);
-        resolve(html);
+        try {
+          resolve(html);
+        } catch (error) {
+          console.log(error);
+        }
       });
     });
   };
