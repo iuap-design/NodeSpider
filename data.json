@@ -1,6 +1,5 @@
 {
-    "urls":[
-        
-        "http://www.bootcdn.cn/codemirror/"
+    "urls": [
+        "http://www.bootcdn.cn/babel-polyfill/"
     ]
 }

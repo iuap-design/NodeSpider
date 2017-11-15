@@ -1,0 +1,20 @@
+{
+    "urls": [
+        "http://www.bootcdn.cn/axios/",
+        "http://www.bootcdn.cn/Director/",
+        "http://www.bootcdn.cn/es6-promise/",
+        "http://www.bootcdn.cn/es6-shim/",
+        "http://www.bootcdn.cn/jquery/",
+        "http://www.bootcdn.cn/knockout/",
+        "http://www.bootcdn.cn/lodash.js/",
+        "http://www.bootcdn.cn/react/",
+        "http://www.bootcdn.cn/react-dom/",
+        "http://www.bootcdn.cn/react-router/",
+        "http://www.bootcdn.cn/redux/",
+        "http://www.bootcdn.cn/require.js/",
+        "http://www.bootcdn.cn/Swiper/",
+        "http://www.bootcdn.cn/underscore.js/",
+        "http://www.bootcdn.cn/codemirror/",
+        "http://www.bootcdn.cn/babel-polyfill/"
+    ]
+}

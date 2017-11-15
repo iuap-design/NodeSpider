@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "getData": "node spider.js",
-    "del": "rm -rf ./data",
     "dev": "npm run del&&npm run getData"
   },
   "repository": {

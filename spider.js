@@ -119,7 +119,7 @@ var startRequest = async function(url, DIRNAME, flag, bool) {
     obj["url"] = url;
     data.push(obj);
     if (i > 0) {
-      return false;
+      // return false;
     }
   });
   var readFileFunPromise = function(fileName) {
