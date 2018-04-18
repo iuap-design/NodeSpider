@@ -1,4 +1,4 @@
-//await
+//await,ES8原生版
 
 var http = require("http");
 var fs = require("fs");
@@ -42,16 +42,7 @@ var fetchPage = function(url, array, bool) {
   startRequest(url, DIRNAME, flag, bool);
 };
 
-var getHtml = function(url) {
-  return new Promise(function(resolve, reject) {
-    request(url, function(error, response, html) {
-      var $ = cheerio.load(html); //采用cheerio模块解析html
-      // callback(undefined, html);
-      resolve(html);
-    });
-  });
-};
-
+//请求页面并下载资源
 var startRequest = async function(url, DIRNAME, flag, bool) {
   var data = [],
     i = 0,
@@ -122,6 +113,8 @@ var startRequest = async function(url, DIRNAME, flag, bool) {
       // return false;
     }
   });
+
+
   var readFileFunPromise = function(fileName) {
     return new Promise(function(resolve, reject) {
       var link = "http://" + fileName.split("://")[1];
@@ -135,6 +128,7 @@ var startRequest = async function(url, DIRNAME, flag, bool) {
     });
   };
 
+  //读取页面并下载资源
   var asyncFun = async function() {
     for (var index = 0; index < data.length; index++) {
       var urls = data[index].url,
@@ -194,6 +188,7 @@ var startRequest = async function(url, DIRNAME, flag, bool) {
     fs.mkdirSync("./jsonconfig/" + name + "/");
     console.log("jsonconfig更新目录已创建成功\n");
   }
+  //写入本地文件
   fs.writeFileSync(
     "./jsonconfig/" + name + "/index.json",
     JSON.stringify(json),
@@ -204,6 +199,18 @@ var startRequest = async function(url, DIRNAME, flag, bool) {
       }
     }
   );
+};
+
+
+//获取掉资源的html
+var getHtml = function(url) {
+  return new Promise(function(resolve, reject) {
+    request(url, function(error, response, html) {
+      var $ = cheerio.load(html); //采用cheerio模块解析html
+      // callback(undefined, html);
+      resolve(html);
+    });
+  });
 };
 
 function savedContent(link) {
