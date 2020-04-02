@@ -15,6 +15,70 @@ var json_urls = JSON.parse(fs.readFileSync(json, "utf8")).urls;
 var config_all_data = JSON.parse(fs.readFileSync(config, "utf8"));
 var config_data = config_all_data.prod;
 var flag = false;
+const OSS = require('ali-oss');
+const ossConfig = require('./ossConfig.json');
+let client = new OSS(ossConfig);
+
+
+var readFileFunPromise = function(fileName) {
+  return new Promise(function(resolve, reject) {
+    var link = "http://" + fileName.split("://")[1];
+    request(link, function(error, response, html) {
+      try {
+        resolve(html);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+  });
+};
+
+
+//上传
+function putCDN(putUrl, filePath) {
+  client.put(putUrl, filePath).then(data => {
+      fs.appendFileSync('./update.txt',`${putUrl} \n`,'utf8')
+      console.log(`😀${filePath} 上传成功`)
+  }).catch(function (err) {
+      console.error(`❌ ${filePath} 上传失败`, err);
+      fs.appendFile('./cdnError.txt', `❌ ${filePath} 上传失败\n`);
+  });
+}
+
+var checkUpload = async (cdnPath,path,item)=>{
+  client.head(cdnPath).then(async (result) => {
+    if (result.res.status == 200) {//cdn已有此文件
+      console.log(`😀${cdnPath} CDN上已存在，跳过 `);
+    }else{
+      console.log('开始写入文件:'+path)
+      var fileData = await readFileFunPromise(item);
+      fs.writeFileSync(path, fileData, "utf-8", function(err) {
+        if (err) {
+          console.log(`写入文件 ${path} 失败✌️`)
+          console.log(err);
+        }else{
+          console.log(`写入文件 ${path} 成功✌️ 开始上传`);
+          // putCDN('static/react-dom/16.13.1/cjs/react-dom-server.browser.development.js','./data/react-dom/16.13.1/cjs/react-dom-server.browser.development.js')
+          putCDN(cdnPath,path);
+        }
+      });
+    }
+  }).catch( async e=>{
+    console.log(`😀${cdnPath} CDN上没有开始下载 `,cdnPath);
+    var fileData = await readFileFunPromise(item);
+      fs.writeFileSync(path, fileData, "utf-8", function(err) {
+        if (err) {
+          console.log(`写入文件 ${path} 失败✌️`)
+          console.log(err);
+        }else{
+          console.log(`写入文件 ${path} 成功✌️ 开始上传`);
+          // putCDN('static/react-dom/16.13.1/cjs/react-dom-server.browser.development.js','./data/react-dom/16.13.1/cjs/react-dom-server.browser.development.js')
+          putCDN(cdnPath,path);
+        }
+      });
+  })
+}
+
 //初始url
 var fetchPage = function(url, array, bool) {
   //封装了一层函数
@@ -115,29 +179,16 @@ var startRequest = async function(url, DIRNAME, flag, bool) {
   });
 
 
-  var readFileFunPromise = function(fileName) {
-    return new Promise(function(resolve, reject) {
-      var link = "http://" + fileName.split("://")[1];
-      request(link, function(error, response, html) {
-        try {
-          resolve(html);
-        } catch (error) {
-          console.log(error);
-        }
-      });
-    });
-  };
+  
 
   //读取页面并下载资源
   var asyncFun = async function() {
     for (var index = 0; index < data.length; index++) {
       var urls = data[index].url,
         version = data[index].version;
-
       for (var i = 0; i < urls.length; i++) {
-        var link = "http://" + urls[i].split("://")[1];
-        var fileData = await readFileFunPromise(urls[i]);
-        console.log(link);
+        var item = urls[i]
+        var link = "http://" + item.split("://")[1];
         var array = link.split(version + "/");
         var name = array[array.length - 1];
         var name_array = name.split("/");
@@ -152,26 +203,26 @@ var startRequest = async function(url, DIRNAME, flag, bool) {
               mkdirs.sync(source);
             } else {
             }
-            fs.writeFileSync(source + name, fileData, "utf-8", function(err) {
-              if (err) {
-                console.log(err);
-              }
-            });
+            let path = source + name;
+            let cdnName = DIRNAME + "/" + version + "/" + dir_name + "/";
+            let cdnPath = `static/${cdnName}${name}`;
+            await checkUpload(cdnPath,path,item)
+           
           } else {
-            dir_name = array[1];
-            var source = "./data/" + DIRNAME + "/" + version;
-            if (fs.existsSync(source)) {
-              // console.log('已经创建过此更新目录了');
-            } else {
-              fs.mkdirSync(source);
-            }
-            fs.writeFileSync(source + "/" + name, fileData, "utf-8", function(
-              err
-            ) {
-              if (err) {
-                console.log(err);
-              }
-            });
+            // dir_name = array[1];
+            // var source2 = "./data/" + DIRNAME + "/" + version;
+            // if (fs.existsSync(source2)) {
+            //   // console.log('已经创建过此更新目录了');
+            // } else {
+            //   fs.mkdirSync(source2);
+            // }
+            // fs.writeFileSync(source2 + "/" + name, fileData, "utf-8", function(
+            //   err
+            // ) {
+            //   if (err) {
+            //     console.log(err);
+            //   }
+            // });
           }
         } catch (error) {
           // console.log(error)
@@ -188,7 +239,7 @@ var startRequest = async function(url, DIRNAME, flag, bool) {
     fs.mkdirSync("./jsonconfig/" + name + "/");
     console.log("jsonconfig更新目录已创建成功\n");
   }
-  //写入本地文件
+  // 写入本地文件
   fs.writeFileSync(
     "./jsonconfig/" + name + "/index.json",
     JSON.stringify(json),
